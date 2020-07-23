@@ -1,0 +1,16 @@
+server:
+  port: 8400
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      retries: 3 #发送失败后会重试次数
+      batch-size: 16384
+      buffer-memory: 33554432
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: kafka_groupid_demo
+      enable-auto-commit: true
+

@@ -1,0 +1,44 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+*.idea
+*.iml
+
+*.iws
+*.iml
+*.ipr
+*.log
+*.log.*
+
+/.idea/
+/target/
+
+# Project exclude paths
+/algorithm/target/
+/dubbo-api/target/
+/dubbo-demo/target/
+/dubbo-demo-client/target/
+/dubbo-demo-server/target/
+/java-juc-demo/target/
+/java-nio-demo/target/
+/jettyDemo/target/
+/mybatis-multiple/target/
+/mybatisPlus-slave/target/
+/slave/target/
+/spring-bloomfilter-jdbc-redis/target/
+/spring-cache-demo/target/
+/spring-distance-demo/target/
+/spring-elasticsearch-demo/target/
+/spring-h2-demo/target/
+/spring-kafka-demo/target/
+/spring-mongodb/target/
+/spring-mybatis-api/target/
+/spring-netty-demo/target/
+/spring-redis-cache/target/
+/spring-rocketmq-demo/target/
+/spring-security-jdbc-demo/target/
+/spring-uploadFile/target/
+/undertowDemo/target/
+/zookeeper-demo/target/

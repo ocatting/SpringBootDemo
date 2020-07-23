@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title class="lang" langKey="xxxx">NoCrud Stat Index</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+    <link href='css/bootstrap.min.css' rel="stylesheet" />
+    <link href="css/style.css" type="text/css" rel="stylesheet"/>
+    <link href="css/summernote.css" type="text/css" rel="stylesheet"/>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/summernote.min.js"></script>
+    <script type="text/javascript" src="js/summernote-zh-CN.js"></script>
+</head>
+<body>
+
+    <div class="container">
+
+
+    </div>
+
+
+</body>
+
+<script type="text/javascript">
+    $.namespace("noCrud.index");
+    noCrud.index = function () {
+        return  {
+            init : function() {
+                noCrud.common.buildHead(0);
+                // this.ajaxRequestForBasicInfo();
+            },
+
+            ajaxRequestForMenuInfo : function() {
+                $.ajax({
+                    type: 'POST',
+                    url: "menu.json",
+                    success: function(data) {
+                        alert(data);
+
+                    },
+                    dataType: "json"
+                });
+            }
+        }
+    }();
+
+    $(document).ready(function() {
+        noCrud.index.init();
+    });
+    // $(function(){
+    //     $('.summernote').summernote({
+    //         height: 800,
+    //         tabsize: 2,
+    //         lang: 'zh-CN'
+    //     });
+    // })
+    // function summerText(){
+    //     alert($('.summernote').summernote('code'));
+    // }
+</script>
+
+</html>

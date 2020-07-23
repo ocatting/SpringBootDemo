@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.slave.mapper.UserMapper">
+
+	<sql id="baseSql">
+	   id,`name`
+	</sql>
+
+    <select id="selectById" resultType="com.project.slave.entity.User">
+    	select <include refid="baseSql"/> from t_user where id = #{id}
+    </select>
+
+	<insert id="save" parameterType="com.project.slave.entity.User" >
+		insert into t_user
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="user.id != null">id,</if>
+			<if test="user.name != null">`name`</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="user.id != null">#{user.id},</if>
+			<if test="user.name != null">#{user.name}</if>
+		</trim>
+	</insert>
+	
+</mapper>

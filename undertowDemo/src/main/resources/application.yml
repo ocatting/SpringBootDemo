@@ -1,0 +1,48 @@
+server:
+  port: 8081
+  undertow.io-threads: 4
+  undertow.worker-threads: 16
+  undertow.buffer-size: 512
+  undertow.direct-buffers: true
+
+spring:
+  datasource:
+    druid:
+      username: root
+      password: 123456
+      jdbcUrl: jdbc:mysql://127.0.0.1:3306/test
+      driverClassName: com.mysql.jdbc.Driver
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: SELECT 1 FROM DUAL
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: true
+      filters: stat,wall
+      maxPoolPreparedStatementPerConnectionSize: 20
+      useGlobalDataSourceStat: true
+      connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:/mybatis/*.xml
+
+my:
+  rest:
+    connectTimeout: 5000
+    readTimeout: 5000
+    urls:
+      - host: nihao # 拦截的主机名
+#        uri:
+#         - 127.0.0.1:8080
+#         - 186.123.23.171:9091
+      - host: zhongg
+#        uri:
+#          - 127.0.0.1:8080
+#          - 186.123.23.171:9091

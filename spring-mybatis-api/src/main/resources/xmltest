@@ -1,0 +1,8 @@
+<script>
+	select * from t_text
+	<where>
+		<if test=" name != null ">
+			name = #{name,javaType=string}
+		</if>
+	</where>
+</script>

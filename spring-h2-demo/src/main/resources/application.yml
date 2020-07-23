@@ -1,0 +1,30 @@
+server:
+  port: 8300
+spring:
+  jpa:
+    #是否生成 ddl语句
+    generate-ddl: false
+    show-sql: true
+    #自动生成ddl,已指定
+    hibernate:
+      ddl-auto: none
+  datasource:
+    platform: h2
+    #指定生成h2数据库脚本
+#    schema: classpath:schema.sql
+    #指定插入数据库语句的脚本位置
+#    data: classpath:data.sql
+    url: jdbc:h2:file:D:/AWork/h2/msg_file
+    driver-class-name: org.h2.Driver
+    username: root
+    password: root
+
+  h2:
+    console:
+      #进行该配置，程序开启时就会启动h2 web consloe。
+      enabled: true # 默认web 控制开启
+      settings:
+        #进行该配置后，h2 web consloe就可以在远程访问了。否则只能在本机访问。
+        web-allow-others: true
+      #进行该配置，你就可以通过YOUR_URL/h2访问h2 web consloe。YOUR_URL是你程序的访问URl。
+      path: /h2
