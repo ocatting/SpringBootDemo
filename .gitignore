@@ -28,6 +28,7 @@
 /mybatisPlus-slave/target/
 /slave/target/
 /spring-bloomfilter-jdbc-redis/target/
+/spring-boot-demo/target/
 /spring-cache-demo/target/
 /spring-distance-demo/target/
 /spring-elasticsearch-demo/target/
