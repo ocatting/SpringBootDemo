@@ -42,6 +42,7 @@
         <module>spring-uploadFile</module>
         <module>spring-mybatis-api</module>
         <module>spring-boot-demo</module>
+        <module>spring-boot-docker-demo</module>
     </modules>
 
     <properties>
