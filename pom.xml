@@ -41,6 +41,7 @@
         <module>spring-cache-demo</module>
         <module>spring-uploadFile</module>
         <module>spring-mybatis-api</module>
+        <module>spring-boot-demo</module>
     </modules>
 
     <properties>
