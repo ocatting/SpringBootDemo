@@ -12,7 +12,7 @@
     <artifactId>spring-boot-docker-demo</artifactId>
 
     <build>
-        <finalName>dockerDemo</finalName>
+        <finalName>dockerdemo</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
