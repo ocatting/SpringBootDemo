@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sync.mapper.SyncTaskInfoMapper">
+  <resultMap id="BaseResultMap" type="com.sync.entity.SyncTaskInfo">
+    <!--@mbg.generated-->
+    <!--@Table t_sync_task_info-->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="group_id" jdbcType="INTEGER" property="groupId" />
+    <result column="task_cron" jdbcType="VARCHAR" property="taskCron" />
+    <result column="task_desc" jdbcType="VARCHAR" property="taskDesc" />
+    <result column="read_db_id" jdbcType="INTEGER" property="readDbId" />
+    <result column="read_conf_id" jdbcType="INTEGER" property="readConfId" />
+    <result column="write_db_id" jdbcType="INTEGER" property="writeDbId" />
+    <result column="write_conf_id" jdbcType="INTEGER" property="writeConfId" />
+    <result column="model" jdbcType="INTEGER" property="model" />
+    <result column="trigger_status" jdbcType="INTEGER" property="triggerStatus" />
+    <result column="trigger_last_time" jdbcType="TIMESTAMP" property="triggerLastTime" />
+    <result column="trigger_next_time" jdbcType="TIMESTAMP" property="triggerNextTime" />
+    <result column="increment_col" jdbcType="VARCHAR" property="incrementCol" />
+    <result column="increment_val" jdbcType="VARCHAR" property="incrementVal" />
+    <result column="increment_type" jdbcType="INTEGER" property="incrementType" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, group_id, task_cron, task_desc, read_db_id, read_conf_id, write_db_id, write_conf_id, 
+    model, trigger_status, trigger_last_time, trigger_next_time, increment_col, increment_val, 
+    increment_type, remark
+  </sql>
+</mapper>

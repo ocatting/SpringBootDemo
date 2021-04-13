@@ -19,7 +19,6 @@
             <!--<version>2.4.4.RELEASE</version>-->
         </dependency>
 
-
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>

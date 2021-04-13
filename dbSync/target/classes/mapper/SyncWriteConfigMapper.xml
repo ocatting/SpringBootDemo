@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sync.mapper.SyncWriteConfigMapper">
+  <resultMap id="BaseResultMap" type="com.sync.entity.SyncWriteConfig">
+    <!--@mbg.generated-->
+    <!--@Table t_sync_write_config-->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="table" jdbcType="VARCHAR" property="table" />
+    <result column="write_mode" jdbcType="VARCHAR" property="writeMode" />
+    <result column="before_sql" jdbcType="LONGVARCHAR" property="beforeSql" />
+    <result column="exec_sql" jdbcType="LONGVARCHAR" property="execSql" />
+    <result column="post_sql" jdbcType="LONGVARCHAR" property="postSql" />
+    <result column="mapping_json" jdbcType="LONGVARCHAR" property="mappingJson" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, `table`, write_mode, before_sql, exec_sql, post_sql, mapping_json, create_time
+  </sql>
+</mapper>

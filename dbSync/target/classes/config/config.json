@@ -1,0 +1,27 @@
+{
+    "mode": "db",
+    "check": true,
+    "readConfig":{
+        "type":"mysql",
+        "driver":"com.mysql.cj.jdbc.Driver",
+        "jdbcUrl":"jdbc:mysql://localhost:5432/apidb",
+        "user": "root",
+        "password":"123456",
+        "mandatoryEncoding":"utf-8",
+        "table": "testTable",
+        "incrementalColumn": "Incremental Col",
+        "customSQL": null
+    },
+    "writeConfig":{
+        "type":"mysql",
+        "driver":"com.mysql.cj.jdbc.Driver",
+        "jdbcUrl":"jdbc:mysql://localhost:3306/aarondb?useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2B8",
+        "user": "root",
+        "password":"123456",
+        "mandatoryEncoding":"utf-8",
+        "table": "testTable",
+        "mapping": {
+            "readCol": "writeCol"
+        }
+    }
+}

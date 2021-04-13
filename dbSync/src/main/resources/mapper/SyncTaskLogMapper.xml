@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sync.mapper.SyncTaskLogMapper">
+  <resultMap id="BaseResultMap" type="com.sync.entity.SyncTaskLog">
+    <!--@mbg.generated-->
+    <!--@Table t_sync_task_log-->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="task_id" jdbcType="INTEGER" property="taskId" />
+    <result column="trigger_time" jdbcType="TIMESTAMP" property="triggerTime" />
+    <result column="trigger_code" jdbcType="VARCHAR" property="triggerCode" />
+    <result column="handle_time" jdbcType="INTEGER" property="handleTime" />
+    <result column="handle_code" jdbcType="VARCHAR" property="handleCode" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, task_id, trigger_time, trigger_code, handle_time, handle_code
+  </sql>
+</mapper>

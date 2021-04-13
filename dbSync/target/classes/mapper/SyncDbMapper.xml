@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sync.mapper.SyncDbMapper">
+  <resultMap id="BaseResultMap" type="com.sync.entity.SyncDb">
+    <!--@mbg.generated-->
+    <!--@Table t_sync_db-->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="db_type" jdbcType="VARCHAR" property="dbType" />
+    <result column="jdbc_url" jdbcType="VARCHAR" property="jdbcUrl" />
+    <result column="driver" jdbcType="VARCHAR" property="driver" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="open_remote" jdbcType="BOOLEAN" property="openRemote" />
+    <result column="remote_address" jdbcType="VARCHAR" property="remoteAddress" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, `name`, db_type, jdbc_url, driver, username, `password`, open_remote, remote_address, 
+    create_time, remark
+  </sql>
+</mapper>

@@ -30,9 +30,9 @@ public class SortObject implements Comparable<SortObject> {
         this.sort = sort;
     }
 
+    @Override
     public int compareTo(SortObject sortObject) {
-        return this.sort > sortObject.getSort() ? 1
-                    :( this.sort < sortObject.getSort()? -1 : 0 );
+        return Integer.compare(this.sort, sortObject.getSort());
     }
 
     @Override

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sync.mapper.SyncReadConfigMapper">
+  <resultMap id="BaseResultMap" type="com.sync.entity.SyncReadConfig">
+    <!--@mbg.generated-->
+    <!--@Table t_sync_read_config-->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="table" jdbcType="VARCHAR" property="table" />
+    <result column="query_sql" jdbcType="LONGVARCHAR" property="querySql" />
+    <result column="limit_memory_bytes" jdbcType="INTEGER" property="limitMemoryBytes" />
+    <result column="mandatory_encoding" jdbcType="VARCHAR" property="mandatoryEncoding" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, `table`, query_sql, limit_memory_bytes, mandatory_encoding, create_time
+  </sql>
+</mapper>
