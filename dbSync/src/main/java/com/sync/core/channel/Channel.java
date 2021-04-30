@@ -59,7 +59,7 @@ public abstract class Channel {
      * @return 描述
      */
     public String getMemoryBytesDesc(){
-        return String.format(" taskId: {%d} consume memoryBytes %db / %db",taskId,memoryBytes.get(),limitBytesSize);
+        return String.format("channel memoryBytes: %db/%db",memoryBytes.get(),limitBytesSize);
     }
 
     /**

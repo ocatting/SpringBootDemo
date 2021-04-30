@@ -1,10 +1,12 @@
 package com.sync.core.db;
 
+import com.sync.core.TaskCollector;
 import com.sync.core.element.Column;
 import com.sync.core.element.Record;
 import com.sync.core.exception.RemoteInvokeException;
 import com.sync.core.exception.RemoteWriteException;
 import com.sync.core.utils.DataBaseType;
+import com.sync.core.utils.ListTriple;
 import com.sync.core.utils.RemoteUtil;
 import com.sync.entity.SyncDb;
 import com.sync.entity.SyncWriteConfig;
@@ -28,7 +30,7 @@ public class RemoteWriterThread extends Thread {
     private final RecordReceiver lineReceiver;
     private final String dataBaseType;
 
-    protected Triple<List<String>, List<Integer>, List<String>> resultSetMetaData;
+    protected ListTriple resultSetMetaData;
     private Integer columnNumber;
     private final String table;
     private final List<String> columns;
@@ -37,7 +39,11 @@ public class RemoteWriterThread extends Thread {
 
     private static final Integer BATCH_SIZE = 1000;
 
-    public RemoteWriterThread(SyncWriteConfig config, RecordReceiver lineReceiver, String threadName){
+    private TaskCollector taskCollector;
+
+
+    public RemoteWriterThread(TaskCollector taskCollector, SyncWriteConfig config, RecordReceiver lineReceiver, String threadName){
+        this.taskCollector = taskCollector;
         this.config = config;
         this.lineReceiver = lineReceiver;
         setName(threadName);
@@ -58,7 +64,9 @@ public class RemoteWriterThread extends Thread {
 
         String uuid = UUID.randomUUID().toString();
 
-        log.info("before_sql exec:{}",config.getBeforeSql());
+        log.info("[{}] start remote write thread ...",uuid);
+
+        log.info("[{}] before_sql exec:{}",uuid,config.getBeforeSql());
         // 前置执行
         RemoteUtil.execSql(uuid,config,config.getBeforeSql());
 
@@ -89,12 +97,12 @@ public class RemoteWriterThread extends Thread {
                 writeBuffer.clear();
             }
         }
-
+        log.info("[{}] post_sql exec:{}",uuid,config.getPostSql());
         // 后置执行
         RemoteUtil.execSql(uuid,config,config.getPostSql());
     }
 
-    private void doWriteDate(String uuid,SyncWriteConfig config,Triple<List<String>, List<Integer>, List<String>> resultSetMetaData,List<Record> writeBuffer){
+    private void doWriteDate(String uuid,SyncWriteConfig config,ListTriple resultSetMetaData,List<Record> writeBuffer){
         try {
             RemoteUtil.writeDate(uuid,config,resultSetMetaData,writeBuffer);
         } catch (RemoteInvokeException e) {
@@ -108,10 +116,12 @@ public class RemoteWriterThread extends Thread {
                 } catch (Exception i) {
                     log.debug(i.toString());
                     // 这里记录脏数据
-                    try {
-                        String fillSql = convertPlaceholders(execSql, record);
-                        log.warn("dirty data : taskId:[{}], Record:{} ",lineReceiver.getTaskId(),fillSql);
-                    } catch (SQLException ignored) {}
+                    if(taskCollector != null){
+                        taskCollector.collectDirtyRecord(record,e.getMessage());
+                    }
+                    // SQL数据填充，自己解析填充语句太麻烦了，算球。如果后面需要写在 TaskCollector 中收集。
+//                  String fillSql = convertPlaceholders(execSql, record);
+//                  log.warn("dirty data : taskId:[{}], Record:{} ",lineReceiver.getTaskId(),fillSql);
                 }
             }
         } catch (Exception e){
@@ -119,6 +129,13 @@ public class RemoteWriterThread extends Thread {
         }
     }
 
+    /**
+     * SQL语句填充
+     * @param sql 执行语句
+     * @param record 字段值
+     * @return 填充好的sql
+     * @throws SQLException 连接异常
+     */
     public String convertPlaceholders(String sql,Record record) throws SQLException {
         List<Object> columns = new ArrayList<>();
         for (int i = 0; i < this.columnNumber; i++) {

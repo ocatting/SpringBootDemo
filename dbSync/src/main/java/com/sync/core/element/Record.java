@@ -1,52 +1,118 @@
 package com.sync.core.element;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.annotation.JSONType;
+import com.sync.core.utils.ClassSize;
+
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @Description: 行数据，存储所有行字段名称，类型等
+ * @Description: 默认行数据
  * @Author: Yan XinYu
- * @Date: 2021-03-03 20:44
+ * @Date: 2021-03-06 14:21
  */
-public interface Record {
+public class Record {
 
-	boolean isTerminate();
+	private static final int RECORD_AVERAGE_COLUMN_NUMBER = 16;
 
-	void terminate(boolean terminate);
+	private final Map<String,Column> columns;
 
-	void addColumn(Column column);
+	private int byteSize;
+
+	private volatile boolean isTerminate = false;
 
 	/**
-	 * 获取字段
-	 * @param columnName
-	 * @return
-	 */
-	Column getColumn(String columnName);
+	 * 首先是Record本身需要的内存
+ 	 */
+	private int memorySize = ClassSize.DefaultRecordHead;
+
+	public Record() {
+		this.columns = new HashMap<>(RECORD_AVERAGE_COLUMN_NUMBER);
+	}
+
+	public Map<String, Column> getColumns() {
+		return columns;
+	}
+
+	public boolean isTerminate() {
+		return isTerminate;
+	}
+
+	public void terminate(boolean terminate) {
+		this.isTerminate = terminate;
+	}
+
+	public void addColumn(Column column) {
+		columns.put(column.getColumnName(),column);
+		incrByteSize(column);
+	}
+
+	public Column getColumn(String columnName) {
+		return columns.get(columnName);
+	}
 
 	@Override
-	String toString();
+	public String toString() {
+		Map<String, Object> json = new HashMap<String, Object>();
+		json.put("size", this.getColumnNumber());
+		json.put("data", this.columns.values());
+		return JSON.toJSONString(json);
+	}
+
+	public int getColumnNumber() {
+		return this.columns.size();
+	}
+
+	public int getByteSize() {
+		return byteSize;
+	}
+
+	public int getMemorySize(){
+		return memorySize;
+	}
+
+	public void mapping(Map<String, String> mapping) {
+		if(mapping == null || mapping.isEmpty()){return;}
+		for (Map.Entry<String, String> entry : mapping.entrySet()) {
+			if(columns.containsKey(entry.getKey())){
+				Column column = columns.get(entry.getKey());
+				column.setColumnName(entry.getValue());
+				columns.put(entry.getValue(),columns.remove(entry.getKey()));
+			}
+		}
+	}
 
 	/**
-	 * 获取字段数量
-	 * @return
+	 * 减少内存
+	 * @param column 字段
 	 */
-	int getColumnNumber();
+	private void decrByteSize(final Column column) {
+		if (null == column) {
+			return;
+		}
+
+		byteSize -= column.getByteSize();
+
+		//内存的占用是column对象的头 再加实际大小
+		memorySize = memorySize -  ClassSize.ColumnHead - column.getByteSize();
+	}
 
 	/**
-	 * 获取数据大小
-	 * @return int 单条记录内存大小
+	 * 增加内存
+	 * @param column 字段
 	 */
-	int getByteSize();
+	private void incrByteSize(final Column column) {
+		if (null == column) {
+			return;
+		}
 
-	/**
-	 * 内存大小包含class本身占用内存
-	 * @return
-	 */
-	int getMemorySize();
+		byteSize += column.getByteSize();
 
-	/**
-	 * 映射表字段
-	 * @param mapping
-	 */
-	void mapping(Map<String,String> mapping);
+		//内存的占用是column对象的头 再加实际大小
+		memorySize = memorySize + ClassSize.ColumnHead + column.getByteSize();
+	}
 
 }

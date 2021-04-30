@@ -98,13 +98,4 @@ public class AesUtil {
         return null;
     }
 
-    public static void main(String[] args) {
-        String message = "root";
-        String key = "cloerwaxczcz";
-        String ciphertext = encrypt(message,key);
-
-        System.out.println("加密后密文为: " + ciphertext);
-        System.out.println("解密后明文为:" + decrypt(ciphertext,key));
-    }
-
 }

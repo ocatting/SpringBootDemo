@@ -1,15 +1,19 @@
 package com.sync.core.element;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.annotation.JSONType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
+@JSONType(seeAlso={
+		StringColumn.class, BytesColumn.class,DateColumn.class,
+		BoolColumn.class,DoubleColumn.class,LongColumn.class
+})
 public abstract class Column {
 
 	private Type type;
-
 	private String columnName;
 	private Object rawData;
 

@@ -1,17 +1,19 @@
 package com.sync.utils;
 
-import com.sync.common.Constant;
+import com.sync.core.JdbcFactory;
+import com.sync.core.utils.DBUtil;
 import com.sync.entity.SyncDb;
 import com.sync.entity.SyncTaskInfo;
 import com.sync.service.SyncDbService;
 import com.sync.service.SyncTaskInfoService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.sql.Connection;
 import java.util.Date;
 
 /**
@@ -32,10 +34,16 @@ public class TaskTriggerHelperTest {
 
     @Test
     public void trigger() {
-
-        SyncTaskInfo task = syncTaskInfoService.queryTask(1);
+        // 这个不会生效的，junit 不支持多线程
+//        SyncTaskInfo task = syncTaskInfoService.queryTask(17);
         // 执行一次任务
-        TaskTriggerHelper.trigger(task);
+//        TaskTriggerHelper.trigger(task);
+    }
+
+    @Test
+    public void col(){
+
+
     }
 
     @Test

@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>DbSync</artifactId>
+    <artifactId>dbSync</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -59,21 +59,11 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-jdbc</artifactId>
-            <version>3.1.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty</groupId>
-                    <artifactId>jetty-runner</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>3.2.2</version>
+            <groupId>com.timveil</groupId>
+            <artifactId>hive-jdbc-uber</artifactId>
+            <version>2.6.5.0-292</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/hive-jdbc-uber-2.6.5.0-292.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -81,6 +71,12 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.16</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zendesk</groupId>
+            <artifactId>mysql-binlog-connector-java</artifactId>
+            <version>0.25.0</version>
         </dependency>
 
         <dependency>
@@ -98,7 +94,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.47</version>
+            <version>1.2.76</version>
         </dependency>
 
         <dependency>

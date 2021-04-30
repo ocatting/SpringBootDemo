@@ -18,6 +18,11 @@ public class LocalCaller implements ICaller {
 
     private Thread readerThread;
     private Thread writerThread;
+    private final TaskCollector taskCollector;
+
+    public LocalCaller(TaskCollector taskCollector) {
+        this.taskCollector = taskCollector;
+    }
 
     /**
      * 获取读库字段
@@ -47,7 +52,7 @@ public class LocalCaller implements ICaller {
     @Override
     public void initWriteThread(SyncDb writeDb, RecordReceiver recordReceiver, SyncWriteConfig config) {
         Writer writer = DbLoadFactory.getWriter(writeDb.getDbType());
-        this.writerThread = new WriterThread(writer,config, recordReceiver,"writer");
+        this.writerThread = new WriterThread(taskCollector,writer,config, recordReceiver,"writer");
         this.writerThread.start();
     }
 

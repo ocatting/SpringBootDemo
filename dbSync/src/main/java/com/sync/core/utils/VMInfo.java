@@ -19,7 +19,7 @@ public class VMInfo {
     private static final Logger LOG = LoggerFactory.getLogger(VMInfo.class);
     static final long MB = 1024 * 1024;
     static final long GB = 1024 * 1024 * 1024;
-    public static Object lock = new Object();
+    public static final Object LOCK = new Object();
     private static VMInfo vmInfo;
 
     /**
@@ -27,7 +27,7 @@ public class VMInfo {
      */
     public static VMInfo getVmInfo() {
         if (vmInfo == null) {
-            synchronized (lock) {
+            synchronized (LOCK) {
                 if (vmInfo == null) {
                     try {
                         vmInfo = new VMInfo();
@@ -36,7 +36,6 @@ public class VMInfo {
                     }
                 }
             }
-
         }
         return vmInfo;
     }

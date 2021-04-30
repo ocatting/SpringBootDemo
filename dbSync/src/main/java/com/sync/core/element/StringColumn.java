@@ -1,5 +1,7 @@
 package com.sync.core.element;
 
+import com.alibaba.fastjson.annotation.JSONType;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
@@ -7,6 +9,7 @@ import java.util.Date;
 /**
  * Created by jingxing on 14-8-24.
  */
+@JSONType(typeName="StringColumn")
 public class StringColumn extends Column {
 
 	public StringColumn(final String columnName,final String rawData) {

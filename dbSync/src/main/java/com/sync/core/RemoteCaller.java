@@ -21,6 +21,12 @@ public class RemoteCaller implements ICaller {
     private Thread readerThread;
     private Thread writeThread;
 
+    private final TaskCollector taskCollector;
+
+    public RemoteCaller(TaskCollector taskCollector) {
+        this.taskCollector = taskCollector;
+    }
+
     @Override
     public List<String> getReadColumns(SyncDb syncDb, String table, String customSql) {
         if (syncDb.getOpenRemote()) {
@@ -44,9 +50,9 @@ public class RemoteCaller implements ICaller {
         // 打开一个线程接收写数据，并发送到远程服务接口中。
         Writer write = DbLoadFactory.getWriter(writeDb.getDbType());
         if (writeDb.getOpenRemote()) {
-            this.writeThread = new RemoteWriterThread(config,recordReceiver,"write");
+            this.writeThread = new RemoteWriterThread(taskCollector,config,recordReceiver,"write");
         } else {
-            this.writeThread = new WriterThread(write,config,recordReceiver,"write");
+            this.writeThread = new WriterThread(taskCollector,write,config,recordReceiver,"write");
         }
         this.writeThread.start();
     }

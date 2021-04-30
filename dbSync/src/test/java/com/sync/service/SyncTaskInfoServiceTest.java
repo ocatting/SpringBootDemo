@@ -1,18 +1,22 @@
 package com.sync.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.sync.common.Constant;
+import com.sync.core.JdbcFactory;
+import com.sync.core.utils.DBUtil;
+import com.sync.core.utils.ListTriple;
+import com.sync.core.utils.ReadHelper;
 import com.sync.entity.*;
 import com.sync.mapper.SyncReadConfigMapper;
-import com.sync.utils.DateUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.jni.Local;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +47,30 @@ public class SyncTaskInfoServiceTest {
 
     @Autowired
     private SyncWriteConfigService syncWriteConfigService;
+
+    @Autowired
+    private SyncDbService syncDbService;
+
+    @Test
+    public void jsonTest(){
+        SyncDb syncDb = syncDbService.getById(5);
+
+        SyncWriteConfig writeConfig = syncWriteConfigService.getById(17);
+
+        Connection connection = JdbcFactory.getConnection(syncDb);
+
+        List<String> writeColumns = DBUtil.getTableColumnsByConn(connection,writeConfig.getTable());
+
+        writeConfig.setSyncDb(syncDb);
+        writeConfig.setColumns(writeColumns);
+
+        ListTriple resultSetMetaData = ReadHelper.columnProperty(writeConfig);
+
+        String jsonString = JSON.toJSONString(resultSetMetaData);
+        System.out.println("jsonString:"+jsonString);
+        ListTriple triple = JSON.parseObject(jsonString, new TypeReference<ListTriple>() {});
+        System.out.println("triple:"+triple);
+    }
 
     @Test
     public void createTask(){

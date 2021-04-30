@@ -44,19 +44,33 @@ class StringCast {
 
 	static String timeZone = "GMT+8";
 
-	static FastDateFormat dateFormatter;
+	static TimeZone timeZoner = TimeZone.getTimeZone(timeZone);
 
-	static FastDateFormat timeFormatter;
+	static FastDateFormat dateFormatter = FastDateFormat.getInstance(dateFormat,timeZoner);
 
-	static FastDateFormat datetimeFormatter;
+	static FastDateFormat timeFormatter = FastDateFormat.getInstance(timeFormat,timeZoner);
 
-	static TimeZone timeZoner;
+	static FastDateFormat datetimeFormatter = FastDateFormat.getInstance(datetimeFormat,timeZoner);
 
 	static String encoding = "UTF-8";
 
 	static Date asDate(final StringColumn column) throws ParseException {
 		if (null == column.asString()) {
 			return null;
+		}
+
+		if(column.asString().length() == 10){
+			try {
+				return new Date(Long.parseLong(column.asString())*1000);
+			} catch (Exception ignored){
+			}
+		}
+
+		if(column.asString().length() == 13){
+			try {
+				return new Date(Long.parseLong(column.asString()));
+			} catch (Exception ignored){
+			}
 		}
 
 		try {
@@ -94,6 +108,8 @@ class StringCast {
 
 		return column.asString().getBytes(StringCast.encoding);
 	}
+
+
 }
 
 /**
@@ -136,7 +152,6 @@ class DateCast {
 
 class BytesCast {
 	static String encoding = "utf-8";
-
 
 	static String asString(final BytesColumn column)
 			throws UnsupportedEncodingException {

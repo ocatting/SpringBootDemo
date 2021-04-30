@@ -1,12 +1,14 @@
 package com.sync.core.db.rdb;
 
 import com.sync.core.JdbcFactory;
+import com.sync.core.TaskCollector;
 import com.sync.core.db.RecordReceiver;
 import com.sync.core.db.Writer;
 import com.sync.core.element.Column;
 import com.sync.core.element.Record;
 import com.sync.core.utils.DBUtil;
 import com.sync.core.utils.DataBaseType;
+import com.sync.core.utils.ListTriple;
 import com.sync.entity.SyncDb;
 import com.sync.entity.SyncWriteConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +32,11 @@ public class RdbWriter implements Writer {
 
     private static final Integer BATCH_SIZE = 1000;
 
+    private TaskCollector taskCollector;
+
     private String dataBaseType;
 
-    protected Triple<List<String>, List<Integer>, List<String>> resultSetMetaData;
+    protected ListTriple resultSetMetaData;
 
     private String table;
 
@@ -45,7 +49,9 @@ public class RdbWriter implements Writer {
     private SyncDb syncDb;
 
     @Override
-    public void init( SyncWriteConfig writeConfig){
+    public void init(TaskCollector taskCollector, SyncWriteConfig writeConfig){
+
+        this.taskCollector = taskCollector;
 
         this.dataBaseType = writeConfig.getSyncDb().getDbType();
 
@@ -103,7 +109,7 @@ public class RdbWriter implements Writer {
                 writeBuffer.add(record);
 
                 if (writeBuffer.size() >= BATCH_SIZE) {
-                    doBatchInsert(connection, writeBuffer);
+                    doBatchInsert(connection,writeBuffer);
                     writeBuffer.clear();
                 }
             }
@@ -120,7 +126,7 @@ public class RdbWriter implements Writer {
     }
 
     @Override
-    public void startWrite(Triple<List<String>, List<Integer>, List<String>> resultSetMetaData,List<Record> writeBuffer) {
+    public void startWrite(ListTriple resultSetMetaData,List<Record> writeBuffer) {
 
         this.resultSetMetaData = resultSetMetaData;
         this.columnNumber = resultSetMetaData.getRight().size();
@@ -142,9 +148,10 @@ public class RdbWriter implements Writer {
     @Override
     public void shutdown() {
 //        DBUtil.closeDBResources(null,connection);
+        log.info("写停止");
     }
 
-    protected void doBatchInsert(Connection connection, List<Record> buffer)
+    protected void doBatchInsert(Connection connection,List<Record> buffer)
             throws SQLException {
         PreparedStatement preparedStatement = null;
         try {
@@ -164,12 +171,10 @@ public class RdbWriter implements Writer {
         } catch (Exception e) {
             log.error("写入数据失败:",e);
             throw new RuntimeException("写入数据失败", e);
-        } finally {
-            DBUtil.closeDBResources(preparedStatement, connection);
         }
     }
 
-    protected void doOneInsert(Connection connection, List<Record> buffer) {
+    protected void doOneInsert(Connection connection,List<Record> buffer) {
         PreparedStatement preparedStatement = null;
         try {
             connection.setAutoCommit(true);
@@ -180,17 +185,16 @@ public class RdbWriter implements Writer {
                     preparedStatement = fillPreparedStatement(preparedStatement, record);
                     preparedStatement.execute();
                 } catch (SQLException e) {
-                    log.debug(e.toString());
-
-//                    this.taskPluginCollector.collectDirtyRecord(record, e);
+                    log.debug(e.getMessage());
+                    if(taskCollector != null){
+                        this.taskCollector.collectDirtyRecord(record, e);
+                    }
                 } finally {
                     preparedStatement.clearParameters();
                 }
             }
         } catch (Exception e) {
             throw new RuntimeException( e);
-        } finally {
-            DBUtil.closeDBResources(preparedStatement, connection);
         }
     }
 
@@ -207,6 +211,7 @@ public class RdbWriter implements Writer {
         java.util.Date utilDate;
         // 查询字段可能与插入字段不一致，忽略掉
         if(column == null){
+            preparedStatement.setString(columnIndex + 1,null);
             return preparedStatement;
         }
         switch (columnSqlType) {
@@ -293,6 +298,7 @@ public class RdbWriter implements Writer {
                 try {
                     utilDate = column.asDate();
                 } catch (RuntimeException e) {
+                    log.error("ex:",e);
                     throw new SQLException(String.format(
                             "TIMESTAMP 类型转换错误：[%s]", column));
                 }

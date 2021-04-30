@@ -1,5 +1,6 @@
 package com.sync.core.db;
 
+import com.sync.core.domain.RemoteReadVo;
 import com.sync.core.element.Record;
 import com.sync.core.utils.RemoteUtil;
 import com.sync.entity.SyncReadConfig;
@@ -20,7 +21,7 @@ public class RemoteReadThread extends Thread {
     private final SyncReadConfig config;
     private final RecordSender recordSender;
 
-    private volatile boolean running;
+    private volatile boolean running = true;
 
     public RemoteReadThread(SyncReadConfig config , RecordSender recordSender, String threadName){
         this.config = config;
@@ -32,12 +33,24 @@ public class RemoteReadThread extends Thread {
     public void run() {
 
         String uuid = UUID.randomUUID().toString();
+        log.info("[{}] start remote read thread ...",uuid);
 
         while (running){
             try {
                 // 打开远程读线程读数据
-                List<Record> records = RemoteUtil.readData(uuid, config);
+                RemoteReadVo vo = RemoteUtil.readData(uuid, config);
+                if(vo == null ){
+                    TimeUnit.SECONDS.sleep(1);
+                    continue;
+                }
 
+                List<Record> records = vo.getRecords();
+
+                if(!vo.isAlive()){
+                    running = false;
+                    sendData(records);
+                    break;
+                }
                 if(recordSender.isStop()){
                     sendData(records);
                     break;
@@ -54,6 +67,9 @@ public class RemoteReadThread extends Thread {
     }
 
     private void sendData(List<Record> records){
+        if(records == null){
+            return;
+        }
         for (Record record : records) {
             if (record.isTerminate()){
                 running = false;

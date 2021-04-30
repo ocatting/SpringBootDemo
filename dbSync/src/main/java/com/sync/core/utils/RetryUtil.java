@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.*;
 
+/**
+ * @author Yu
+ */
 public final class RetryUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(RetryUtil.class);
@@ -18,7 +21,7 @@ public final class RetryUtil {
      * @param callable               实际逻辑
      * @param retryTimes             最大重试次数（>1）
      * @param sleepTimeInMilliSecond 运行失败后休眠对应时间再重试
-     * @param exponential            休眠时间是否指数递增
+     * @param exponential            休眠时间是否指数递增(sleepTimeInMilliSecond * (long) Math.pow(2, i);)
      * @param <T>                    返回值类型
      * @return 经过重试的callable的执行结果
      */
@@ -36,7 +39,7 @@ public final class RetryUtil {
      * @param callable               实际逻辑
      * @param retryTimes             最大重试次数（>1）
      * @param sleepTimeInMilliSecond 运行失败后休眠对应时间再重试
-     * @param exponential            休眠时间是否指数递增
+     * @param exponential            休眠时间是否指数递增 (sleepTimeInMilliSecond * (long) Math.pow(2, i);)
      * @param <T>                    返回值类型
      * @param retryExceptionClass    出现指定的异常类型时才进行重试
      * @return 经过重试的callable的执行结果
@@ -59,7 +62,7 @@ public final class RetryUtil {
      * @param callable               实际逻辑
      * @param retryTimes             最大重试次数（>1）
      * @param sleepTimeInMilliSecond 运行失败后休眠对应时间再重试
-     * @param exponential            休眠时间是否指数递增
+     * @param exponential            休眠时间是否指数递增 (sleepTimeInMilliSecond * (long) Math.pow(2, i);)
      * @param timeoutMs              callable执行超时时间，毫秒
      * @param executor               执行异步操作的线程池
      * @param <T>                    返回值类型

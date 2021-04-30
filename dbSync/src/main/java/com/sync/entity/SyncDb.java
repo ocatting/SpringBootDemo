@@ -139,6 +139,8 @@ public class SyncDb {
                 if((pos = databaseAndParmas.indexOf("?")) != -1){
                     params = databaseAndParmas.substring(pos + 1);
                     database = databaseAndParmas.substring(0,pos);
+                } else {
+                    database = databaseAndParmas;
                 }
                 if((pos = host.indexOf(':')) != -1){
                     port = host.substring(pos + 1);

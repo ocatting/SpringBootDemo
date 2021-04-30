@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @Description: 数据库连接测试
+ * @Description: 数据库连接测试，数据库表结构同步测试，字段同步测试，索引同步测试
  * @Author: Yan XinYu
  * @Date: 2021-03-11 9:24
  */

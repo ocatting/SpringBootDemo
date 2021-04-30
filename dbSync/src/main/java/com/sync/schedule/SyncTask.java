@@ -3,12 +3,14 @@ package com.sync.schedule;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sync.core.JdbcFactory;
 import com.sync.core.cron.CronExpression;
+import com.sync.core.utils.VMInfo;
 import com.sync.entity.SyncDb;
 import com.sync.entity.SyncTaskInfo;
 import com.sync.service.*;
 import com.sync.utils.DateUtil;
 import com.sync.utils.TaskTriggerHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,6 +41,10 @@ public class SyncTask implements InitializingBean, DisposableBean {
     public static final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(2,
                         new ThreadFactoryBuilder().setNameFormat(SCHEDULE_THREAD_NAME).build());
 
+    private static final ScheduledExecutorService JVM_ES = new ScheduledThreadPoolExecutor(1,
+            new BasicThreadFactory.Builder().namingPattern("jvm-info-thread").daemon(true).build(),
+            new ThreadPoolExecutor.AbortPolicy());
+
     @Autowired
     public SyncTask(SyncTaskInfoService syncTaskInfoService, SyncDbService syncDbService) {
         this.syncTaskInfoService = syncTaskInfoService;
@@ -47,6 +54,7 @@ public class SyncTask implements InitializingBean, DisposableBean {
     @Override
     public void destroy() throws Exception {
         log.info("destroy ....");
+        JVM_ES.shutdown();
         scheduledExecutorService.shutdown();
         JdbcFactory.shutdown();
     }
@@ -85,6 +93,16 @@ public class SyncTask implements InitializingBean, DisposableBean {
             }
         },5L,1L, TimeUnit.SECONDS);
 
+        // println jvm info ,cpu的平均消耗，GC的统计
+        JVM_ES.scheduleWithFixedDelay(()->{
+
+            VMInfo vmInfo = VMInfo.getVmInfo();
+            if (vmInfo != null) {
+                vmInfo.getDelta(false);
+                log.info(vmInfo.totalString());
+            }
+
+        },30,30,TimeUnit.MINUTES);
     }
 
     /**

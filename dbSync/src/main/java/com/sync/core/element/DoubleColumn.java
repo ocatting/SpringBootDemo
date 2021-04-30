@@ -1,9 +1,12 @@
 package com.sync.core.element;
 
+import com.alibaba.fastjson.annotation.JSONType;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
+@JSONType(typeName="DoubleColumn")
 public class DoubleColumn extends Column {
 
 	public DoubleColumn(final String columnName,final String data) {

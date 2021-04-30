@@ -29,6 +29,8 @@ public class Engine {
 
     private final ICaller caller;
 
+    private final TaskCollector taskCollector;
+
     public Engine(SyncTaskInfo syncTaskInfo,
                   SyncReadConfig readConfig, SyncWriteConfig writeConfig, SyncDb readDb, SyncDb writeDb) {
         this.syncTaskInfo = syncTaskInfo;
@@ -37,8 +39,8 @@ public class Engine {
 
         this.readDb = readDb;
         this.writeDb = writeDb;
-
-        this.caller = ICaller.getInstance(syncTaskInfo.getModel());
+        this.taskCollector = new TaskCollector(syncTaskInfo.getId());
+        this.caller = ICaller.getInstance(syncTaskInfo.getModel(),taskCollector);
     }
 
     public void start(){
@@ -55,7 +57,7 @@ public class Engine {
             Map<String, String> mapping = JSON.parseObject(writeConfig.getMappingJson(), new TypeReference<Map<String, String>>() {});
             log.info(" column mapping json :{}",mapping);
 
-            String readSql = getReadSql(readColumns,readConfig.getTable());
+            String readSql = getReadSql(readColumns,readConfig.getTable(),readConfig.getQuerySql());
             readConfig.setSyncDb(readDb);
             readConfig.setQuerySql(readSql);
             log.info(" read sql :{}",readSql);
@@ -92,20 +94,30 @@ public class Engine {
 
     }
 
-    public String getReadSql(List<String> columns,String table){
+    public String getReadSql(List<String> columns,String table,String querySql){
+        if(!StringUtils.isEmpty(querySql)){
+            if(querySql.toLowerCase().contains("limit")){
+                return querySql;
+            }
+        }
         StringBuilder result = new StringBuilder();
-        result.append("SELECT ").append(StringUtils.join(columns, ","));
-        result.append(" FROM `").append(table).append("`");
+
+        if(StringUtils.isEmpty(querySql)){
+            result.append("SELECT ").append(StringUtils.join(columns, ","));
+            result.append(" FROM `").append(table).append("`");
+        } else {
+            result.append(querySql);
+        }
 
         if(StringUtils.isEmpty(syncTaskInfo.getIncrementCol())){
             return result.toString();
         }
         result.append(" WHERE 1=1");
         if(!StringUtils.isEmpty(syncTaskInfo.getIncrementVal())){
-            result.append(" AND `").append(syncTaskInfo.getIncrementCol()).append("` >= '").append(syncTaskInfo.getIncrementVal()).append("'");
+            result.append(" AND `").append(syncTaskInfo.getIncrementCol()).append("` > '").append(syncTaskInfo.getIncrementVal()).append("'");
         }
         if(!StringUtils.isEmpty(syncTaskInfo.getMaxVal())){
-            result.append(" AND `").append(syncTaskInfo.getIncrementCol()).append("` < '").append(syncTaskInfo.getMaxVal()).append("'");
+            result.append(" AND `").append(syncTaskInfo.getIncrementCol()).append("` <= '").append(syncTaskInfo.getMaxVal()).append("'");
         }
         return result.toString();
     }

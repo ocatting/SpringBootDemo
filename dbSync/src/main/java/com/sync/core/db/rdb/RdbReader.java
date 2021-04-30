@@ -1,6 +1,7 @@
 package com.sync.core.db.rdb;
 
 import com.sync.core.JdbcFactory;
+import com.sync.core.ValueFilter;
 import com.sync.core.db.Reader;
 import com.sync.core.db.RecordSender;
 import com.sync.core.element.*;
@@ -31,6 +32,12 @@ public class RdbReader implements Reader {
 
     private String querySql;
 
+    private long rsNextLastTime;
+
+    private ResultSet rs;
+
+    private String table;
+
     @Override
     public void init(SyncReadConfig readConfig){
 
@@ -41,6 +48,8 @@ public class RdbReader implements Reader {
         this.mandatoryEncoding = readConfig.getMandatoryEncoding();
 
         this.querySql = readConfig.getQuerySql();
+
+        this.table = readConfig.getTable();
     }
 
     @Override
@@ -51,45 +60,51 @@ public class RdbReader implements Reader {
         log.info("Begin to read record by Sql: [{}] .",querySql);
 
         int columnNumber = 0;
-        ResultSet rs = null;
         try {
-            rs = DBUtil.query(conn, querySql, FETCH_SIZE);
+            this.rs = DBUtil.query(conn, querySql, FETCH_SIZE);
 
             ResultSetMetaData metaData = rs.getMetaData();
             columnNumber = metaData.getColumnCount();
 
+            this.rsNextLastTime = System.nanoTime();
             while (rs.next()) {
-                this.transportOneRecord(recordSender, rs, metaData, columnNumber, mandatoryEncoding);
+                this.transportOneRecord(recordSender, rs, metaData, columnNumber);
+                this.rsNextLastTime = System.nanoTime();
             }
 
-            log.info("Finished read record by Sql: [{}\n] .",querySql);
+            log.info("Finished read record by Sql: [{}] .",querySql);
             rs.close();
         } catch (Exception e) {
-            throw new RuntimeException(String.format("%s \n querySql:%s",this.dataBaseType,querySql),e);
+            throw new RuntimeException(String.format(" querySql:%s",querySql),e);
         } finally {
-            DBUtil.closeDBResources(null,conn);
+            DBUtil.closeDBResources(rs,null,conn);
         }
     }
 
     @Override
     public void shutdown() {
-//        DBUtil.closeDBResources(null,conn);
+        DBUtil.closeDBResources(rs,null,conn);
     }
 
     protected void transportOneRecord(RecordSender recordSender, ResultSet rs,
-                                      ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding) {
-        Record record = buildRecord(recordSender,rs,metaData,columnNumber,mandatoryEncoding);
+                                      ResultSetMetaData metaData, int columnNumber) {
+        Record record = buildRecord(recordSender,rs,metaData,columnNumber);
         recordSender.sendToWriter(record);
     }
 
-    protected final byte[] EMPTY_CHAR_ARRAY = new byte[0];
+    @Override
+    public long getRsNextLastTime(){
+        return this.rsNextLastTime;
+    }
 
-    protected Record buildRecord(RecordSender recordSender,ResultSet rs, ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding) {
+//    protected final byte[] EMPTY_CHAR_ARRAY = new byte[0];
+
+    protected Record buildRecord(RecordSender recordSender,ResultSet rs, ResultSetMetaData metaData, int columnNumber) {
 
         Record record = recordSender.createRecord();
         try {
             for (int i = 1; i <= columnNumber; i++) {
-                String columnName = metaData.getColumnName(i);
+                String columnName = DBUtil.lookupColumnName(metaData, i,this.table);
 
                 switch (metaData.getColumnType(i)) {
 
@@ -99,14 +114,14 @@ public class RdbReader implements Reader {
                     case Types.LONGVARCHAR:
                     case Types.NVARCHAR:
                     case Types.LONGNVARCHAR:
-                        String rawData;
-                        if(StringUtils.isBlank(mandatoryEncoding)){
-                            rawData = rs.getString(i);
-                        }else{
-
-                            rawData = new String((rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
-                                    rs.getBytes(i)), mandatoryEncoding);
-                        }
+                        String rawData = ValueFilter.StringFilter(rs.getString(i));
+//                        if(StringUtils.isBlank(mandatoryEncoding)){
+//                            rawData = rs.getString(i);
+//                        } else {
+//                            // 这里 Hive 不支持
+//                            rawData = new String((rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
+//                                    rs.getBytes(i)), mandatoryEncoding);
+//                        }
                         record.addColumn(new StringColumn(columnName,rawData));
                         break;
 
@@ -181,8 +196,7 @@ public class RdbReader implements Reader {
                 }
             }
         } catch (Exception e) {
-                log.debug("read data " + record.toString()
-                        + " occur exception:", e);
+                log.error("read data " + record.toString() + " occur exception:", e);
         }
         return record;
     }

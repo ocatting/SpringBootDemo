@@ -1,6 +1,8 @@
 package com.sync.core.utils;
 
+import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.alibaba.druid.sql.parser.SQLSelectParser;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -444,7 +446,7 @@ public final class DBUtil {
      */
     public static List<String> getTables(Connection conn,String catalog) throws SQLException {
         DatabaseMetaData databaseMetaData = conn.getMetaData();
-        ResultSet tables = databaseMetaData.getTables(catalog, null, "%", null);
+        ResultSet tables = databaseMetaData.getTables(catalog, catalog, "%", null);
         ArrayList<String> tablesList = new ArrayList<>();
         while (tables.next()) {
             tablesList.add(tables.getString("TABLE_NAME"));
@@ -587,10 +589,10 @@ public final class DBUtil {
         if(StringUtils.isEmpty(customSql)){
             return getTableColumnsByConn(conn,tableName);
         }
-        return getTableColumnsByConnSql(conn,customSql);
+        return getTableColumnsByConnSql(conn,tableName,customSql);
     }
 
-    public static List<String> getTableColumnsByConn(Connection conn, String tableName) {
+    public static List<String> getTableColumnsByConn(Connection conn,String tableName) {
         List<String> columns = new ArrayList<String>();
         Statement statement = null;
         ResultSet rs = null;
@@ -601,9 +603,14 @@ public final class DBUtil {
             rs = statement.executeQuery(queryColumnSql);
             ResultSetMetaData rsMetaData = rs.getMetaData();
             for (int i = 0, len = rsMetaData.getColumnCount(); i < len; i++) {
-                columns.add(rsMetaData.getColumnName(i + 1));
+                String columnName = rsMetaData.getColumnName(i + 1);
+                if(StringUtils.isEmpty(columnName)){
+                    continue;
+                }
+                // hive 中由于配置问题，这里会同时存在表名称。
+                String newColumnName = StringUtils.replace(columnName,tableName+".","");
+                columns.add(newColumnName);
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(queryColumnSql,e);
         } finally {
@@ -612,7 +619,7 @@ public final class DBUtil {
         return columns;
     }
 
-    public static List<String> getTableColumnsByConnSql(Connection conn, String customSql) {
+    public static List<String> getTableColumnsByConnSql(Connection conn, String tableName,String customSql) {
         List<String> columns = new ArrayList<String>();
         Statement statement = null;
         ResultSet rs = null;
@@ -621,19 +628,47 @@ public final class DBUtil {
         try {
             statement = conn.createStatement();
             // 注意这里不支持复杂的SQL语句
-            queryColumnSql = customSql.split("where")[0] + " where 1=2";
+            queryColumnSql = paresColSql(customSql);
+
             rs = statement.executeQuery(queryColumnSql);
             ResultSetMetaData rsMetaData = rs.getMetaData();
-            for (int i = 0, len = rsMetaData.getColumnCount(); i < len; i++) {
-                columns.add(rsMetaData.getColumnName(i + 1));
+            for (int i = 1; i <= rsMetaData.getColumnCount(); i++) {
+                String columnName = lookupColumnName(rsMetaData, i,tableName);
+                if(StringUtils.isEmpty(columnName)){
+                    continue;
+                }
+                // hive 中由于配置问题，这里会同时存在表名称。
+                String newColumnName = StringUtils.replace(columnName,tableName+".","");
+                columns.add(newColumnName);
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(queryColumnSql,e);
         } finally {
             DBUtil.closeDBResources(statement, conn);
         }
         return columns;
+    }
+
+    /**
+     * 自定义解析字段SQL
+     * @param customSql
+     * @return
+     */
+    private static String paresColSql(String customSql){
+        String result = null;
+        // 去除 limit
+        int limitIndex = customSql.toLowerCase().indexOf("limit");
+        if(limitIndex != -1){
+            result = customSql.substring(0,limitIndex);
+        }
+        // 去除 where
+        int whereIndex = customSql.toLowerCase().indexOf("where");
+        if(whereIndex == -1){
+            result = customSql + " where 1=2";
+        } else {
+            result = customSql.substring(0,whereIndex) + " where 1=2";
+        }
+        return result;
     }
 
     /**
@@ -1027,33 +1062,41 @@ public final class DBUtil {
     /**
      * @return Left:ColumnName Middle:ColumnType Right:ColumnTypeName
      */
-    public static Triple<List<String>, List<Integer>, List<String>> getColumnMetaData (
-            Connection conn, String tableName, String column) {
+    public static ListTriple getColumnMetaData (Connection conn, String tableName, String column) {
         Statement statement = null;
         ResultSet rs = null;
 
-        Triple<List<String>, List<Integer>, List<String>> columnMetaData = new ImmutableTriple<List<String>, List<Integer>, List<String>>(
-                new ArrayList<>(), new ArrayList<>(),new ArrayList<>());
+        ListTriple columnMetaData = new ListTriple();
         try {
             statement = conn.createStatement();
-            String queryColumnSql = "select " + column + " from " + tableName
-                    + " where 1=2";
-
+            String queryColumnSql = "select " + column + " from " + tableName + " where 1=2";
             rs = statement.executeQuery(queryColumnSql);
             ResultSetMetaData rsMetaData = rs.getMetaData();
-            for (int i = 0, len = rsMetaData.getColumnCount(); i < len; i++) {
-
-                columnMetaData.getLeft().add(rsMetaData.getColumnName(i + 1));
-                columnMetaData.getMiddle().add(rsMetaData.getColumnType(i + 1));
-                columnMetaData.getRight().add(rsMetaData.getColumnTypeName(i + 1));
+            int columnCount = rsMetaData.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = lookupColumnName(rsMetaData,i,tableName);
+                if(StringUtils.isEmpty(columnName)){
+                    continue;
+                }
+                columnMetaData.getLeft().add(columnName);
+                columnMetaData.getMiddle().add(rsMetaData.getColumnType(i));
+                columnMetaData.getRight().add(rsMetaData.getColumnTypeName(i));
             }
             return columnMetaData;
-
         } catch (SQLException e) {
             throw new RuntimeException(String.format("获取表:%s 的字段的元信息时失败. 请联系 DBA 核查该库、表信息.", tableName), e);
         } finally {
             DBUtil.closeDBResources(rs, statement, null);
         }
+    }
+
+    public static String lookupColumnName(ResultSetMetaData resultSetMetaData, int columnIndex,String tableName) throws SQLException {
+        String name = resultSetMetaData.getColumnLabel(columnIndex);
+        if (StringUtils.isEmpty(name)) {
+            name = resultSetMetaData.getColumnName(columnIndex);
+        }
+        // hive 中由于配置问题，这里会同时存在表名称。
+        return StringUtils.replace(name,tableName+".","");
     }
 
     public static boolean testConnWithoutRetry(String dataBaseType,String driver,

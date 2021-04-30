@@ -1,6 +1,8 @@
 package com.sync.core.db;
 
+import com.sync.core.TaskCollector;
 import com.sync.core.element.Record;
+import com.sync.core.utils.ListTriple;
 import com.sync.entity.SyncWriteConfig;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -17,7 +19,7 @@ public interface Writer {
      * 参数初始化
      * @param writeConfig 写配置
      */
-    void init(SyncWriteConfig writeConfig);
+    void init(TaskCollector taskCollector, SyncWriteConfig writeConfig);
 
     /**
      * 执行前执行
@@ -42,7 +44,7 @@ public interface Writer {
      * @param resultSetMetaData 数据类型
      * @param writeBuffer 行数据
      */
-    void startWrite(Triple<List<String>, List<Integer>, List<String>> resultSetMetaData, List<Record> writeBuffer);
+    void startWrite(ListTriple resultSetMetaData, List<Record> writeBuffer);
 
     /**
      * 停止

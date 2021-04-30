@@ -26,4 +26,10 @@ public interface Reader {
      */
     void shutdown();
 
+    /**
+     * 获取rs.next(),最后使用时间
+     * @return nano
+     */
+    long getRsNextLastTime();
+
 }

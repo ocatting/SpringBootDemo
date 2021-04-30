@@ -14,8 +14,6 @@ import lombok.Data;
  * @Author: Yan XinYu
  * @Date: 2021-04-11 9:58
  */
-
-
 @Data
 @TableName(value = "t_sync_write_config")
 public class SyncWriteConfig {

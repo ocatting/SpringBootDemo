@@ -1,11 +1,13 @@
 package com.sync.core.element;
 
+import com.alibaba.fastjson.annotation.JSONType;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
+@JSONType(typeName="LongColumn")
 public class LongColumn extends Column {
 
 	/**

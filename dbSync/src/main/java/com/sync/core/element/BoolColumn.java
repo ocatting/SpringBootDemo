@@ -1,9 +1,11 @@
 package com.sync.core.element;
+import com.alibaba.fastjson.annotation.JSONType;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
-
+@JSONType(typeName="BoolColumn")
 public class BoolColumn extends Column {
 
 	public BoolColumn(final String columnName,Boolean bool) {

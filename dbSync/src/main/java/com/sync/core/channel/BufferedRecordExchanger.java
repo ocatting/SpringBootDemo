@@ -21,9 +21,10 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
     private volatile boolean shutdown = false;
 
     private final int totalMemoryBytes;
-    private static final AtomicInteger currentMemoryBytes = new AtomicInteger(0);
+    private static final AtomicInteger CURRENT_MEMORY_BYTES = new AtomicInteger(0);
     private Map<String,String> mapping;
     private final int taskId;
+    private long totalNum = 0;
 
     /**
      * 传输数据管道
@@ -35,7 +36,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         this.totalMemoryBytes = totalMemoryBytes;
         this.channel = new MemoryChannel(taskId,null,null);
         try {
-            RECORD_CLASS = (Class<? extends Record>) Class.forName("com.sync.core.element.DefaultRecord");
+            RECORD_CLASS = (Class<? extends Record>) Class.forName("com.sync.core.element.Record");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("配置异常导致实例化行数据失败",e);
         }
@@ -54,7 +55,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         }
         // 字段映射
         record.mapping(this.mapping);
-        currentMemoryBytes.addAndGet(- record.getMemorySize());
+        CURRENT_MEMORY_BYTES.addAndGet(- record.getMemorySize());
         return record;
     }
 
@@ -85,7 +86,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         Validate.notNull(record, "record不能为空.");
         try {
             while (true){
-                if(currentMemoryBytes.get() > totalMemoryBytes){
+                if(CURRENT_MEMORY_BYTES.get() > totalMemoryBytes){
                     TimeUnit.MILLISECONDS.sleep(500);
                 } else {
                     break;
@@ -94,8 +95,9 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         } catch (InterruptedException e) {
             throw new RuntimeException("线程被中断",e);
         }
-        currentMemoryBytes.addAndGet(record.getMemorySize());
+        CURRENT_MEMORY_BYTES.addAndGet(record.getMemorySize());
         this.channel.push(record);
+        totalNum ++;
     }
 
     @Override
@@ -104,7 +106,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
             throw new RuntimeException("已停止写入数据");
         }
         this.channel.clear();
-        currentMemoryBytes.set(0);
+        CURRENT_MEMORY_BYTES.set(0);
     }
 
     @Override
@@ -120,12 +122,10 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
     @Override
     public boolean shutdown() {
         this.shutdown = true;
-        this.channel.clear();
-        currentMemoryBytes.set(0);
         return this.shutdown;
     }
 
     public String printDesc(){
-        return " total:"+currentMemoryBytes.get()+"/"+totalMemoryBytes + channel.getMemoryBytesDesc() + " == " + "queue size:" + channel.getQueueSize();
+        return " task:["+taskId+"] sent count:"+totalNum+", total:"+CURRENT_MEMORY_BYTES.get()+"/"+totalMemoryBytes + "," +channel.getMemoryBytesDesc() + " , " + "queue size:" + channel.getQueueSize();
     }
 }

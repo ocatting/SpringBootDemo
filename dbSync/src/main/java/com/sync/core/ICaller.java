@@ -75,11 +75,11 @@ public interface ICaller {
      * @param model 模式
      * @return 代理实例
      */
-    static ICaller getInstance(int model){
+    static ICaller getInstance(int model,TaskCollector taskCollector){
         if(model == LOCAL_MODE){
-            return new LocalCaller();
+            return new LocalCaller(taskCollector);
         } else if (model == REMOTE_MODE) {
-            return new RemoteCaller();
+            return new RemoteCaller(taskCollector);
         } else {
             throw new RuntimeException("传输模式选择错误");
         }

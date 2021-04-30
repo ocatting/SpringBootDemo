@@ -1,10 +1,12 @@
 package com.sync.core;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.druid.pool.DruidPooledConnection;
 import com.alibaba.fastjson.JSON;
 import com.sync.entity.SyncDb;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -68,7 +70,7 @@ public class JdbcFactory {
             druidDataSource.setPassword(syncDb.getPassword());
             druidDataSource.setDriverClassName(syncDb.getDriver());
             druidDataSource.setDbType(syncDb.getDbType());
-            druidDataSource.setMaxActive(30);
+            druidDataSource.setMaxActive(100);
             druidDataSource.setInitialSize(1);
             druidDataSource.setMaxWait(60000);
             druidDataSource.setMinIdle(1);
@@ -79,25 +81,4 @@ public class JdbcFactory {
         }
     }
 
-    public static void main(String[] args) throws SQLException {
-        System.out.println("测试");
-        DruidDataSource druidDataSource = new DruidDataSource();
-        druidDataSource.setUrl("jdbc:mysql://localhost:3306/test?useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai");
-        druidDataSource.setUsername("root");
-        druidDataSource.setPassword("123456");
-        druidDataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        druidDataSource.setDbType("mysql");
-        druidDataSource.setMaxActive(2);
-        druidDataSource.setInitialSize(1);
-        druidDataSource.setMaxWait(5000);
-        druidDataSource.setMinIdle(0);
-
-        // 原来池子里的东西使用完成后还是要还回去的。connection1.close()
-        DruidPooledConnection connection1 = druidDataSource.getConnection();
-        System.out.println("connection1:"+connection1.isValid(2000));
-        DruidPooledConnection connection2 = druidDataSource.getConnection();
-        System.out.println("connection2:"+connection2.isValid(2000));
-        DruidPooledConnection connection3 = druidDataSource.getConnection();
-        System.out.println("connection3:"+connection3.isValid(2000));
-    }
 }

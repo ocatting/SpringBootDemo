@@ -28,9 +28,7 @@ public class StandAloneScheduler implements ProcessInner {
 
     @Override
     public void startTask() {
-        // 字段映射工具
         bufferedRecordExchanger.setMapping(configuration.getMapping());
-        // 开始传输
         new TaskContainerRunner(configuration,bufferedRecordExchanger,caller).run();
     }
 

@@ -3,7 +3,9 @@ package com.sync.core.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.sync.common.CommonResult;
+import com.sync.core.domain.RemoteReadVo;
 import com.sync.core.element.Record;
 import com.sync.core.exception.RemoteInvokeException;
 import com.sync.core.exception.RemoteWriteException;
@@ -11,7 +13,8 @@ import com.sync.entity.SyncDb;
 import com.sync.entity.SyncReadConfig;
 import com.sync.entity.SyncWriteConfig;
 import com.sync.utils.AesUtil;
-import org.apache.commons.lang3.tuple.Triple;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,7 @@ import java.util.List;
  * @Author: Yan XinYu
  * @Date: 2021-03-20 16:28
  */
+@Slf4j
 public class RemoteUtil {
 
     public static final String GET_INCREMENT_VAL_API = "/transfer/getIncrementVal";
@@ -31,7 +35,7 @@ public class RemoteUtil {
     public static final String GET_READ_DATA_API = "/transfer/readData";
     public static final String GET_WRITE_DATA_API = "/transfer/writeData";
     public static final String GO_EXEC_SQL_API = "/transfer/execSql";
-    public static final String GO_COLUMN_PROPERTY_API = "/write/columnProperty";
+    public static final String GO_COLUMN_PROPERTY_API = "/transfer/write/columnProperty";
 
 
     public static final RestTemplate REST_TEMPLATE = new RestTemplateBuilder()
@@ -40,7 +44,7 @@ public class RemoteUtil {
     public static String getIncrementVal(String address, SyncDb syncDb, String querySql){
 
         JSONObject json = new JSONObject();
-        json.put("syncdb",syncDb);
+        json.put("syncDb",syncDb);
         json.put("querySql",querySql);
 
         String encryptStr = AesUtil.encrypt(json.toJSONString(),AesUtil.SECURITY_KEY);
@@ -54,7 +58,7 @@ public class RemoteUtil {
     public static List<String> getColumns(String address, SyncDb syncDb, String table){
 
         JSONObject json = new JSONObject();
-        json.put("syncdb",syncDb);
+        json.put("syncDb",syncDb);
         json.put("table",table);
 
         String encryptStr = AesUtil.encrypt(json.toJSONString(),AesUtil.SECURITY_KEY);
@@ -66,18 +70,18 @@ public class RemoteUtil {
         return JSON.parseObject(responseEntity.getBody(),new TypeReference<List<String>>(){});
     }
 
-    public static Triple<List<String>, List<Integer>, List<String>> getColumnProperty(String address,SyncWriteConfig writeConfig){
+    public static ListTriple getColumnProperty(String address,SyncWriteConfig writeConfig){
         JSONObject json = new JSONObject();
         json.put("writeConfig",writeConfig);
 
         String encryptStr = AesUtil.encrypt(json.toJSONString(),AesUtil.SECURITY_KEY);
 
         ResponseEntity<String> responseEntity = REST_TEMPLATE.postForEntity(address + GO_COLUMN_PROPERTY_API, encryptStr, String.class);
+        log.info("请求 getColumnProperty ：{}",responseEntity.getBody());
         if (HttpStatus.OK != responseEntity.getStatusCode()) {
             throw new RuntimeException("请求服务发生异常:"+responseEntity.getStatusCode());
         }
-        CommonResult<Triple<List<String>, List<Integer>, List<String>>> result = JSON.parseObject(responseEntity.getBody(),
-                new TypeReference<CommonResult<Triple<List<String>, List<Integer>, List<String>>>>() {});
+        CommonResult<ListTriple> result = JSON.parseObject(responseEntity.getBody(),new TypeReference<CommonResult<ListTriple>>() {});
         if(result == null){
             throw new RuntimeException("请求服务执行异常:result is null ");
         }
@@ -87,7 +91,7 @@ public class RemoteUtil {
         return result.getData();
     }
 
-    public static List<Record> readData(String uuid, SyncReadConfig readConfig){
+    public static RemoteReadVo readData(String uuid, SyncReadConfig readConfig){
 
         SyncDb syncDb = readConfig.getSyncDb();
 
@@ -101,7 +105,7 @@ public class RemoteUtil {
         if (HttpStatus.OK != responseEntity.getStatusCode()) {
             throw new RemoteInvokeException("请求readData服务发生异常:"+responseEntity.getStatusCode());
         }
-        return JSON.parseObject(responseEntity.getBody(),new TypeReference<List<Record>>(){});
+        return JSON.parseObject(responseEntity.getBody(),new TypeReference<RemoteReadVo>(){});
     }
 
     /**
@@ -110,14 +114,14 @@ public class RemoteUtil {
      * @param writeConfig 执行配置
      * @param records 记录数
      */
-    public static void writeDate(String uuid, SyncWriteConfig writeConfig, Triple<List<String>, List<Integer>, List<String>> resultSetMetaData,List<Record> records) throws Exception {
+    public static void writeDate(String uuid, SyncWriteConfig writeConfig, ListTriple resultSetMetaData,List<Record> records) throws Exception {
         SyncDb syncDb = writeConfig.getSyncDb();
 
         JSONObject json = new JSONObject();
         json.put("uuid",uuid);
         json.put("writeConfig",writeConfig);
         json.put("resultSetMetaData",resultSetMetaData);
-        json.put("records",records);
+        json.put("records",JSON.toJSONString(records, SerializerFeature.WriteClassName));
 
         String encryptStr = AesUtil.encrypt(json.toJSONString(),AesUtil.SECURITY_KEY);
 
@@ -129,7 +133,7 @@ public class RemoteUtil {
             }
             return JSON.parseObject(responseEntity.getBody(), new TypeReference<CommonResult<Boolean>>() {});
 
-        }, 2, 1000L, true);
+        }, 2, 1000L, false);
 
         if(result == null || !result.isSuccess()){
             // 切换模式，单条发送且没有该数据则覆盖。
@@ -139,6 +143,10 @@ public class RemoteUtil {
 
     public static void execSql(String uuid,SyncWriteConfig writeConfig,String execSql){
         SyncDb syncDb = writeConfig.getSyncDb();
+
+        if(StringUtils.isEmpty(execSql)){
+            return;
+        }
 
         JSONObject json = new JSONObject();
         json.put("uuid",uuid);

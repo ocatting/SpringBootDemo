@@ -1,5 +1,6 @@
 package com.sync.core.db;
 
+import com.sync.core.TaskCollector;
 import com.sync.entity.SyncWriteConfig;
 
 /**
@@ -13,8 +14,10 @@ public class WriterThread extends Thread {
     private final Writer writer;
     private final SyncWriteConfig config;
     private final RecordReceiver lineReceiver;
+    private final TaskCollector taskCollector;
 
-    public WriterThread(Writer writer, SyncWriteConfig config,RecordReceiver lineReceiver, String threadName){
+    public WriterThread(TaskCollector taskCollector,Writer writer, SyncWriteConfig config,RecordReceiver lineReceiver, String threadName){
+        this.taskCollector = taskCollector;
         this.writer = writer;
         this.config = config;
         this.lineReceiver = lineReceiver;
@@ -23,13 +26,13 @@ public class WriterThread extends Thread {
 
     @Override
     public void run() {
-        writer.init(config);
+        writer.init(taskCollector,config);
         // 执行前置
         writer.beforeStart(config);
         // 写数据，如果没有数据了就停止;
         writer.startWrite(lineReceiver);
         // 监听管道，如果管道停止了，那么结束写线程。
-        while (!lineReceiver.shutdown()){
+        while (!lineReceiver.isStop()){
             writer.startWrite(lineReceiver);
         }
         // 执行后置

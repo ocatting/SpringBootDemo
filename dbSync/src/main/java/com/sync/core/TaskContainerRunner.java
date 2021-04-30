@@ -2,10 +2,7 @@ package com.sync.core;
 
 import com.sync.core.channel.BufferedRecordExchanger;
 import com.sync.core.domain.Configuration;
-import com.sync.core.utils.VMInfo;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @Description: 任务运行容器
@@ -21,10 +18,13 @@ public class TaskContainerRunner implements Runnable {
 
     private final BufferedRecordExchanger bufferedRecordExchanger;
 
+    private final TaskCollector taskCollector;
+
     public TaskContainerRunner(Configuration configuration,BufferedRecordExchanger bufferedRecordExchanger,ICaller caller){
         this.configuration = configuration;
         this.bufferedRecordExchanger = bufferedRecordExchanger;
         this.caller = caller;
+        this.taskCollector = new TaskCollector(configuration.getTaskId());
     }
 
     @Override
@@ -34,19 +34,13 @@ public class TaskContainerRunner implements Runnable {
             // 统计 与 检查执行状态
             while (this.caller.readAlive()) {
                 // 周期统计
-                log.info("DESC: {}",bufferedRecordExchanger.printDesc());
-                Thread.sleep(2000);
+                log.info("DESC:{}",bufferedRecordExchanger.printDesc());
+                Thread.sleep(5000);
             }
             bufferedRecordExchanger.shutdown();
+            log.info("Stop DESC:{}",bufferedRecordExchanger.printDesc());
         } catch (Exception e) {
             log.error("运行失败:{}",e.getMessage(),e);
-        } finally {
-            // 最后打印cpu的平均消耗，GC的统计
-            VMInfo vmInfo = VMInfo.getVmInfo();
-            if (vmInfo != null) {
-                vmInfo.getDelta(false);
-                log.info(vmInfo.totalString());
-            }
         }
     }
 
@@ -68,6 +62,10 @@ public class TaskContainerRunner implements Runnable {
         }
 
         log.info("read thread write thread start...");
+    }
+
+    private TaskCollector getTaskCollector(){
+        return this.taskCollector;
     }
 
 }
